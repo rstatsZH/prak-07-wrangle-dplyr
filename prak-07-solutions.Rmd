@@ -1,0 +1,272 @@
+---
+title: "Praktikum 07"
+author: "Füge deinen Namen hizu"
+date: "Füge ein Datum hinzu"
+output: 
+  html_document: 
+    toc: true
+    toc_float: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+
+# Ich habe hier erneut Standardeinstellungen für Code-chunks angepasst
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+```
+
+# Lade Packages
+
+1. Lade `dplyr` und `palmerpenguins` Packages
+2. Führe den Code-chunk aus
+
+```{r}
+
+library(dplyr)
+library(palmerpenguins)
+
+```
+# Tastaturkürzel
+
+Ich habe hier nochmals die wichtigsten Tastaturkürzel für dich hinzugefügt
+
+- **Einen neuen Code-chunk hinzufügen:** Ctrl + Alt + I
+- **Code "Zeile für Zeile" innerhalb eines Code-chunks ausführen:** Ctrl + Enter
+- **Den gesamten Code-chunk ausführen:** Ctrl + Shift + Enter
+- **Die Pipe (%>%):** Ctrl + Shift + M
+- **Der Zuweisungs-Operator (<-)**: Alt + -
+
+# dplyr::summarise()
+
+Mit der Funktion `summarise()` wird ein neuer Dataframe erstellt. Der Dataframe enthält eine Spalte für jede angegebene zusammenfassende Statistik.
+
+Dieser enthält eine (oder mehrere) Zeilen für jede Kombination von Gruppierungsvariablen.
+
+```{r dplyr-summarise}
+
+penguins %>% 
+  summarise()
+
+penguins %>% 
+  summarise(n())  # neue Spalte bekommen namen der Funktion
+
+penguins %>% 
+  summarise(
+    count = n(),  # neue Spalte wird benannt
+    max = max(year) # neue Spalte wird benannt
+  )
+
+nrow(penguins)
+dim(penguins)  # reihen + spalten
+str(penguins)
+glimpse(penguins)s
+
+```
+
+
+```{r dplyr-summarise-filter}
+
+penguins %>% 
+  filter(species == "Chinstrap", island == "Dream") %>%  # gefilterter Dataframe wird an summarise weitergegeben
+  summarise(anzahl = n())
+
+```
+
+# dplyr::group_by()
+
+Die Funktion `group_by()` wird genutzt um einen existierenden Dataframe in einen gruppierten Dataframe zu konvertieren, sodass die folgenden Anweisungen auf der Ebene der Gruppen angewandt werden. Der resultierende Dataframe enthält eine (oder mehrere) Zeilend für jede Kombination von Gruppierungsvariablen, und eine Spalte für jede Gruppierungsvariable.
+
+## Gruppierte Zusammenfassung
+
+```{r dplyr-summarise-group} 
+
+penguins %>% 
+  group_by(species, island)  # beachte Output. Groups: species, island [5]
+
+penguins %>% 
+  group_by(island, species) %>% 
+  summarise(count = n()) # Pro Gruppe eine Reihe. Pro Variable eine Spalte im Output.
+
+penguins %>% 
+  filter(body_mass_g > 3700) %>% # Erst filtern, dann zusammenfassen
+  group_by(island, species) %>% 
+  summarise(count = n())
+
+```
+
+## Mit NAs umgehen
+
+```{r dplyr-summarise-group-na}
+
+penguins %>% 
+  group_by(island) %>% 
+  summarise(
+    count = n(),
+    mean = mean(bill_depth_mm)  # Datensatz hat NA Werte für bill_depth_mm
+  )
+
+penguins %>% 
+  group_by(island) %>% 
+  summarise(
+    count = n(),
+    mean = mean(bill_depth_mm, na.rm = TRUE) # NA werden ignoriert (aber nicht entfernt)
+  )
+
+penguins %>% 
+  filter(!is.na(bill_depth_mm)) %>%  # NAs werden entfernt
+  group_by(island) %>% 
+  summarise(
+    count = n(),
+    mean = mean(bill_depth_mm) # NAs müssen hier nicht mehr ignoriert werden
+  )
+
+
+## drop_na
+
+library(tidyr)  # Eine Funktion aus dem tidyr Package
+
+penguins %>% 
+  drop_na() # Entfernt jede Reihe welche ein NA in minimal einer Spalte hat
+
+penguins %>% 
+  drop_na(bill_depth_mm) # Entfernt jeder Reihe welche ein NA in der Spalte bill_depth_mm hat
+
+penguins %>% 
+  drop_na(!sex) # Enfernt jede Reihe mit NAs in einer Variable, ausser der Variable sex
+
+
+```
+
+## Weitere zusammenfassende Funktionen
+
+Eine Liste aller Funktionen findest du hier: https://dplyr.tidyverse.org/reference/summarise.html#useful-functions
+
+```{r dplyr-summarise-fkt}
+
+# Weitere zusammenfassende Funktionen (summary Fuctions), welche in summarise genutzt werden können 
+
+penguins %>%
+  drop_na(!sex) %>% 
+  group_by(island, sex) %>%
+  summarise(
+    count = n(),
+    mass_mean = mean(body_mass_g),  
+    mass_sd = sd(body_mass_g),
+    mass_min = min(body_mass_g),
+    mass_max = max(body_mass_g),
+    mass_median = median(body_mass_g)  # Die Hälfte der Beobachtungen über diesem Wert, die Hälfte der Beobachtungen unter diesem Wert
+  )
+
+
+## Quantiles sind etwas speziell
+
+penguins %>% 
+  drop_na() %>% 
+  group_by(island) %>% 
+  summarise(
+    quantiles = quantile(body_mass_g, probs = c(0.25, 0.5, 0.75)), # quantile werden pro Spalte angegeben
+    probs = c("q25", "median", "q75") # Fügt einen Vektor der Länge 2 mit den Werten 0.25 und 0.75 hinzu
+  ) %>% 
+  pivot_wider(names_from = "probs", values_from = "quantiles") # Eine Funktion aus dem tidyr Package
+
+```
+
+
+```{r dplyr-summarise-plot}
+
+# Boxplot zeigt die Quantile mit dem Mean (Durchschnitt)
+
+library(ggplot2)
+
+penguins %>% 
+  drop_na(sex) %>%  
+  ggplot(aes(x = island, y = bill_depth_mm, color = island)) +
+  geom_boxplot(outlier.shape = NA) +  # Zeigt outlier nicht an, sind aber weiterhin in den Daten
+  geom_jitter(width = 0.2, alpha = 0.3) + # Füge die Punkte hinzu
+  coord_flip() + # Dreht den Plot
+  facet_wrap(~sex, ncol = 1) +
+  scale_color_brewer(type = "qual", palette = 2) +
+  theme_minimal(base_size = 16)
+
+```
+
+Mehr Erklärungen zum Boxplot: https://www.data-to-viz.com/caveat/boxplot.html
+
+# dplyr::count()
+
+Mit der Funktion `count()` lassen sich Häufigkeitstabellen erstellen. Die Funktion kombiniert die Funktionen `group_by` und `summarise()` mit `n()` in eine Funktion.
+
+```{r dplyr-count}
+
+penguins %>% 
+  group_by(species) %>% 
+  summarise(
+    n = n()
+  )
+
+penguins %>% 
+  count(species)  # fässt die Schritte des voherigen Codes in einen Zusammen
+
+penguins %>% 
+  count(species, island) %>% 
+  count(species, wt = n)  # wt (weight) wird angegeben wenn der Dataframe schon eine Spalte mit Häufigkeiten hat
+
+```
+
+# dplyr::case_when()
+
+Die Funktion `case_when()` in Kombination mit `mutate()` erlaubt es neue Variablen basierend auf bestimmten Konditionen anderer Variablen zu erstellen.
+
+```{r, dplyr-case-when}
+penguins %>% 
+  mutate(size_bin = case_when(   # mutate erstellt eine neu Variable
+    body_mass_g > 4500 ~ "large", # basierend auf body_mass_g
+    
+    # wenn body_mass_g kleiner 3000 und grösser = 4500, dann "medium"
+    body_mass_g > 3000 & body_mass_g <= 4500 ~ "medium", 
+    
+    # wenn body_mass_g <= 3000, dann "small"
+    body_mass_g <= 3000 ~ "small")) %>%
+  count(size_bin)
+
+
+penguins %>% 
+  mutate(flipper_rank = case_when(
+    flipper_length_mm < 200 ~ 1,
+    flipper_length_mm >= 200 ~ 2,
+    TRUE ~ 0)) %>% # Gibt es Werte die nicht die Bedingungen erfüllen, werden diese mit "TRUE ~ "definiert
+  count(flipper_rank)
+
+
+```
+
+
+```{r, dplyr-case-when-tib}
+
+# Ein character (Text) Vektor mit 3 Werten
+tiere_vektor <- c("Katze", "Ente", "Eichhoernchen", "Pferd")
+
+# Ein numerischer Vektor mit drei Werten
+id_vektor <-  c(1, 2, 3, 4)
+
+# Mit der Funktion tibble() wird ein tibble oder auch Dataframe erstellt
+tiere_tib <- tibble(
+  id = id_vektor,
+  tiere = tiere_vektor
+)
+
+# Füge eine neue Spalte "Sprache" basierend auf dem Tier hinzu
+tiere_tib %>% 
+  mutate(sprache = case_when(
+    tiere == "Pferd" ~ "Wieher!",
+    tiere == "Katze" ~ "Miauh!",
+    TRUE ~ "Wie macht das Tier?"
+  ))
+
+```
+
+
+
+
