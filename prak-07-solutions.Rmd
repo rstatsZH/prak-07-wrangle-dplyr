@@ -139,6 +139,26 @@ penguins %>%
 
 ```
 
+## Nochmals ggplot2
+
+```{r ggplot-bar-col}
+
+ggplot(penguins, aes(x = species)) +
+  geom_bar()  # Bar plot braucht nur die x-Achse. Die y-Achse wird anhand der Werte in der Variable species berechnet 
+
+
+# Wir können dies aus selbst machen über group_by für die species
+penguins_spec_count <- penguins %>% 
+  group_by(species) %>% 
+  summarise(count = n())
+
+# Ein neuer plot, diesmal mit einem Wert für x und für y aus unserem neuen Dataframe
+ggplot(penguins_spec_count, aes(x = species, y = count)) +
+  geom_col() # !!! Achtung: Hier nun Funktion geom_col nutzen
+
+```
+
+
 ## Weitere zusammenfassende Funktionen
 
 Eine Liste aller Funktionen findest du hier: https://dplyr.tidyverse.org/reference/summarise.html#useful-functions
@@ -214,6 +234,7 @@ penguins %>%
   count(species, wt = n)  # wt (weight) wird angegeben wenn der Dataframe schon eine Spalte mit Häufigkeiten hat
 
 ```
+
 
 # dplyr::case_when()
 

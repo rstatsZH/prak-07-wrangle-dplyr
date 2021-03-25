@@ -72,6 +72,13 @@ Die Funktion `group_by()` wird genutzt um einen existierenden Dataframe in einen
 
 ```
 
+## Nochmals ggplot2
+
+```{r ggplot-bar-col}
+
+
+```
+
 ## Weitere zusammenfassende Funktionen
 
 Eine Liste aller Funktionen findest du hier: https://dplyr.tidyverse.org/reference/summarise.html#useful-functions
