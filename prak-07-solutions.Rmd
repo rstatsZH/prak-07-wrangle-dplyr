@@ -154,7 +154,8 @@ penguins_spec_count <- penguins %>%
 
 # Ein neuer plot, diesmal mit einem Wert für x und für y aus unserem neuen Dataframe
 ggplot(penguins_spec_count, aes(x = species, y = count)) +
-  geom_col() # !!! Achtung: Hier nun Funktion geom_col nutzen
+  geom_col() + # !!! Achtung: Hier nun Funktion geom_col nutzen 
+  coord_flip()
 
 ```
 
