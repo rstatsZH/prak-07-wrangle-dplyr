@@ -25,6 +25,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```{r}
 
 library(dplyr)
+library(ggplot2)
 library(palmerpenguins)
 
 ```
@@ -61,7 +62,7 @@ penguins %>%
 nrow(penguins)
 dim(penguins)  # reihen + spalten
 str(penguins)
-glimpse(penguins)s
+glimpse(penguins)
 
 ```
 
@@ -159,7 +160,6 @@ ggplot(penguins_spec_count, aes(x = species, y = count)) +
 
 ```
 
-
 ## Weitere zusammenfassende Funktionen
 
 Eine Liste aller Funktionen findest du hier: https://dplyr.tidyverse.org/reference/summarise.html#useful-functions
@@ -179,7 +179,6 @@ penguins %>%
     mass_max = max(body_mass_g),
     mass_median = median(body_mass_g)  # Die Hälfte der Beobachtungen über diesem Wert, die Hälfte der Beobachtungen unter diesem Wert
   )
-
 
 ## Quantiles sind etwas speziell
 
@@ -201,9 +200,10 @@ penguins %>%
 
 library(ggplot2)
 
-penguins %>% 
-  drop_na(sex) %>%  
-  ggplot(aes(x = island, y = bill_depth_mm, color = island)) +
+penguins_clean <- penguins %>% 
+  drop_na(sex)   
+  
+ggplot(penguins_clean, aes(x = island, y = bill_depth_mm, color = island)) +
   geom_boxplot(outlier.shape = NA) +  # Zeigt outlier nicht an, sind aber weiterhin in den Daten
   geom_jitter(width = 0.2, alpha = 0.3) + # Füge die Punkte hinzu
   coord_flip() + # Dreht den Plot
@@ -242,16 +242,17 @@ penguins %>%
 Die Funktion `case_when()` in Kombination mit `mutate()` erlaubt es neue Variablen basierend auf bestimmten Konditionen anderer Variablen zu erstellen.
 
 ```{r, dplyr-case-when}
+
 penguins %>% 
-  mutate(size_bin = case_when(   # mutate erstellt eine neu Variable
-    body_mass_g > 4500 ~ "large", # basierend auf body_mass_g
+  mutate(bin_size = case_when(   # mutate erstellt eine neu Variable
+    body_mass_g > 4500 ~ "gross", # basierend auf body_mass_g
     
     # wenn body_mass_g kleiner 3000 und grösser = 4500, dann "medium"
-    body_mass_g > 3000 & body_mass_g <= 4500 ~ "medium", 
+    body_mass_g > 3000 & body_mass_g <= 4500 ~ "mittel", 
     
     # wenn body_mass_g <= 3000, dann "small"
-    body_mass_g <= 3000 ~ "small")) %>%
-  count(size_bin)
+    body_mass_g <= 3000 ~ "klein")) %>%
+  count(bin_size)
 
 
 penguins %>% 
